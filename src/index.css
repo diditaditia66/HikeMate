@@ -1,13 +1,83 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#0b0d10;
+  --panel:#ffffff;
+  --muted:#667085;
+  --text:#1a1f2c;
+  --brand:#16a34a;
+  --brand-700:#15803d;
+  --ring:#d0d5dd;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  background:#f7f7fb;
+  color:var(--text);
 }
+
+/* Layout */
+.app-header{
+  position: sticky; top:0; z-index:10;
+  background:#1f2937; color:#fff;
+  border-bottom:1px solid #111827;
+}
+.container{max-width:1120px; margin:0 auto; padding:16px;}
+.nav{display:flex; gap:12px; align-items:center}
+.nav a{color:#c7d2fe; text-decoration:none; font-weight:600}
+.nav a:hover{text-decoration:underline}
+
+/* Card & panel */
+.card{
+  background:var(--panel);
+  border:1px solid #e5e7eb; border-radius:16px;
+  padding:18px; box-shadow:0 6px 16px rgba(2,6,23,.04);
+}
+.card + .card{margin-top:12px}
+
+/* Buttons */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  gap:8px; height:40px; padding:0 16px; border-radius:10px;
+  border:1px solid transparent; font-weight:600; cursor:pointer;
+  transition:.18s ease;
+}
+.btn-primary{ background:var(--brand); color:#fff; }
+.btn-primary:hover{ background:var(--brand-700); }
+.btn-ghost{ background:#f3f4f6; color:#111827; border-color:#e5e7eb; }
+.btn-ghost:hover{ background:#e5e7eb; }
+.btn-danger{ background:#ef4444; color:#fff; }
+.btn-danger:hover{ background:#dc2626; }
+
+/* Forms */
+.input, .select, .textarea{
+  width:100%; height:40px; padding:0 12px; border-radius:10px;
+  border:1px solid #e5e7eb; background:#fff; outline:none;
+  transition:border-color .15s ease, box-shadow .15s ease;
+  font-size:14px;
+}
+.textarea{ height:auto; min-height:96px; padding:12px; resize:vertical; }
+.input:focus, .select:focus, .textarea:focus{
+  border-color:#a5b4fc; box-shadow:0 0 0 3px rgba(99,102,241,.15);
+}
+.label{display:block; font-weight:600; margin:12px 0 6px; color:#111827}
+
+/* Table */
+.table{width:100%; border-collapse:collapse}
+.table th,.table td{padding:12px; border-bottom:1px solid #eee; text-align:left; font-size:14px}
+.table th{color:#374151; font-weight:700; background:#fafafa}
+
+/* Helpers */
+.row{display:flex; gap:12px; flex-wrap:wrap}
+.col{flex:1 1 280px}
+.m-0{margin:0} .mt-8{margin-top:8px} .mt-16{margin-top:16px}
+.mt-24{margin-top:24px} .mt-32{margin-top:32px}
+.center{display:flex; align-items:center; justify-content:center}
+.badge{font-size:12px; padding:2px 8px; background:#eef2ff; color:#3730a3; border-radius:999px; border:1px solid #e0e7ff}
+
+/* Footer */
+.app-footer{border-top:1px solid #e5e7eb; margin-top:48px; color:var(--muted)}
