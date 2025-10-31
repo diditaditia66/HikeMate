@@ -6,14 +6,21 @@ import axios from 'axios';
 // =====================================================
 // Konfigurasi dasar
 // - Bisa override via .env: REACT_APP_API_BASE_URL
+//   (Contoh: https://api.hikemate.didit-aditia.my.id/api)
 // =====================================================
 export const API_BASE_URL =
   process.env.REACT_APP_API_BASE_URL || 'https://server.cartenz-vpn.my.id/api';
 
-// Jika nanti pakai Cognito, token bisa disuntik via setAuthToken()
-let authToken = null;
-export const setAuthToken = (token) => {
-  authToken = token || null;
+// ======== Auth Token Provider ========
+// Kita tidak menyimpan token statis agar selalu fresh.
+// AuthContext akan mendaftarkan provider ini.
+let tokenProvider = null;
+/**
+ * Daftarkan provider pengambil token.
+ * @param {() => (string|null|undefined)} fn - fungsi yang mengembalikan idToken terbaru
+ */
+export const bindAuthTokenProvider = (fn) => {
+  tokenProvider = typeof fn === 'function' ? fn : null;
 };
 
 // Buat axios instance agar konsisten
@@ -25,26 +32,38 @@ const http = axios.create({
   },
 });
 
-// Inject Authorization header jika ada token
+// Inject Authorization header jika ada token (selalu ambil paling baru)
 http.interceptors.request.use((config) => {
-  if (authToken) {
-    config.headers.Authorization = `Bearer ${authToken}`;
+  const raw = tokenProvider ? tokenProvider() : null;
+  const token = typeof raw === 'string' ? raw : null;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    delete config.headers.Authorization;
   }
   return config;
 });
 
-// Helper unwrap & error
+// Normalisasi error (tambahkan status & message yang enak dibaca)
+http.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    const status = error?.response?.status;
+    const data = error?.response?.data;
+    const message =
+      data?.error ||
+      data?.message ||
+      error?.message ||
+      (status ? `HTTP ${status}` : 'Network error');
+    const wrapped = new Error(message);
+    wrapped.status = status;
+    wrapped.data = data;
+    throw wrapped;
+  }
+);
+
+// Helper unwrap
 const ok = (res) => res.data;
-const onErr = (label) => (err) => {
-  // Debug friendly logging
-  // eslint-disable-next-line no-console
-  console.error(`${label}:`, {
-    message: err?.message,
-    status: err?.response?.status,
-    data: err?.response?.data,
-  });
-  throw err;
-};
 
 // =====================================================
 // TRIP ENDPOINTS
@@ -52,41 +71,26 @@ const onErr = (label) => (err) => {
 
 // GET /trips
 export const getTrips = async () => {
-  try {
-    const res = await http.get('/trips');
-    return ok(res);
-  } catch (e) {
-    return onErr('Error fetching trips')(e);
-  }
+  const res = await http.get('/trips');
+  return ok(res);
 };
 
 // GET /trips/:tripId
 export const getTrip = async (tripId) => {
-  try {
-    const res = await http.get(`/trips/${tripId}`);
-    return ok(res);
-  } catch (e) {
-    return onErr('Error fetching trip details')(e);
-  }
+  const res = await http.get(`/trips/${tripId}`);
+  return ok(res);
 };
 
 // POST /trips
-// tripData contoh:
-// {
-//   name: 'Trip Semeru',
-//   startDate: '2025-11-10',
-//   endDate: '2025-11-13',
-//   dateRange: '2025-11-10 s/d 2025-11-13', // opsional
-//   participants: [{ name: 'Andi', role: 'Ketua' }, { name: 'Budi', role: 'Logistik' }], // opsional
-//   participantsCount: 10 // opsional (kalau tidak ada, akan dihitung dari participants jika tersedia)
-// }
 export const createTrip = async (tripData) => {
-  try {
-    const res = await http.post('/trips', tripData);
-    return ok(res);
-  } catch (e) {
-    return onErr('Error creating trip')(e);
-  }
+  const res = await http.post('/trips', tripData);
+  return ok(res);
+};
+
+// DELETE /trips/:tripId
+export const deleteTrip = async (tripId) => {
+  const res = await http.delete(`/trips/${tripId}`);
+  return ok(res);
 };
 
 // =====================================================
@@ -99,45 +103,30 @@ export const getLogistics = async (tripId) => {
     const res = await http.get(`/trips/${tripId}/logistics`);
     return ok(res);
   } catch (e) {
-    // Jika backend balas 404 untuk trip tidak ada → lempar error,
-    // jika 404 karena list kosong (seharusnya 200[]), kita fallback ke []
-    if (e?.response?.status === 404) return [];
-    return onErr('Error fetching logistics')(e);
+    if (e.status === 404) return [];
+    throw e;
   }
 };
 
 // POST /trips/:tripId/logistics
-// logisticsData contoh: { name:'Tenda', quantity:2, description:'Kapasitas 4', price:350000 }
 export const addLogistics = async (tripId, logisticsData) => {
-  try {
-    const res = await http.post(`/trips/${tripId}/logistics`, logisticsData);
-    return ok(res);
-  } catch (e) {
-    return onErr('Error adding logistics')(e);
-  }
+  const res = await http.post(`/trips/${tripId}/logistics`, logisticsData);
+  return ok(res);
 };
 
 // PUT /trips/:tripId/logistics/:logisticsId
 export const updateLogistics = async (tripId, logisticsId, logisticsData) => {
-  try {
-    const res = await http.put(
-      `/trips/${tripId}/logistics/${logisticsId}`,
-      logisticsData
-    );
-    return ok(res);
-  } catch (e) {
-    return onErr('Error updating logistics')(e);
-  }
+  const res = await http.put(
+    `/trips/${tripId}/logistics/${logisticsId}`,
+    logisticsData
+  );
+  return ok(res);
 };
 
 // DELETE /trips/:tripId/logistics/:logisticsId
 export const deleteLogistics = async (tripId, logisticsId) => {
-  try {
-    const res = await http.delete(`/trips/${tripId}/logistics/${logisticsId}`);
-    return ok(res);
-  } catch (e) {
-    return onErr('Error deleting logistics')(e);
-  }
+  const res = await http.delete(`/trips/${tripId}/logistics/${logisticsId}`);
+  return ok(res);
 };
 
 // =====================================================
@@ -150,21 +139,27 @@ export const getROP = async (tripId) => {
     const res = await http.get(`/trips/${tripId}/rop`);
     return ok(res);
   } catch (e) {
-    // Sama seperti logistics: toleransi 404 → []
-    if (e?.response?.status === 404) return [];
-    return onErr('Error fetching ROP')(e);
+    if (e.status === 404) return [];
+    throw e;
   }
 };
 
 // POST /trips/:tripId/rop
-// ropData contoh: { date:'2025-11-10 05:00', activity:'Start trekking', personInCharge:'Andi' }
 export const createROP = async (tripId, ropData) => {
-  try {
-    const res = await http.post(`/trips/${tripId}/rop`, ropData);
-    return ok(res);
-  } catch (e) {
-    return onErr('Error creating ROP')(e);
-  }
+  const res = await http.post(`/trips/${tripId}/rop`, ropData);
+  return ok(res);
+};
+
+// DELETE /trips/:tripId/rop/:ropId
+export const deleteROP = async (tripId, ropId) => {
+  const res = await http.delete(`/trips/${tripId}/rop/${ropId}`);
+  return ok(res);
+};
+
+// (Opsional) PUT /trips/:tripId/rop/:ropId
+export const updateROP = async (tripId, ropId, ropData) => {
+  const res = await http.put(`/trips/${tripId}/rop/${ropId}`, ropData);
+  return ok(res);
 };
 
 // =====================================================
@@ -173,14 +168,10 @@ export const createROP = async (tripId, ropData) => {
 
 // GET /trips/:tripId/cost-summary[?people=5]
 export const getTripCostSummary = async (tripId, people /* optional */) => {
-  try {
-    const res = await http.get(`/trips/${tripId}/cost-summary`, {
-      params: { people },
-    });
-    return ok(res);
-  } catch (e) {
-    return onErr('Error fetching trip cost summary')(e);
-  }
+  const res = await http.get(`/trips/${tripId}/cost-summary`, {
+    params: { people },
+  });
+  return ok(res);
 };
 
 // =====================================================
@@ -188,7 +179,7 @@ export const getTripCostSummary = async (tripId, people /* optional */) => {
 // =====================================================
 const api = {
   API_BASE_URL,
-  setAuthToken,
+  bindAuthTokenProvider,
 
   // Trip
   getTrips,
@@ -204,6 +195,8 @@ const api = {
   // ROP
   getROP,
   createROP,
+  deleteROP,
+  updateROP,
 
   // Cost
   getTripCostSummary,

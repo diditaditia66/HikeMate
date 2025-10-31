@@ -81,3 +81,88 @@ body{
 
 /* Footer */
 .app-footer{border-top:1px solid #e5e7eb; margin-top:48px; color:var(--muted)}
+
+/* ====== Auth layout & tabs (tambahan ringan) ====== */
+.auth-wrap{ min-height: calc(100vh - 120px); }
+
+.tabs{
+  display:flex; gap:8px; align-items:center;
+  background:#fafafa; padding:6px; border-radius:999px;
+  border:1px solid #e5e7eb; width:fit-content;
+}
+.tab{
+  appearance:none; cursor:pointer;
+  border:none; background:transparent; color:#334155;
+  font-weight:600; font-size:14px;
+  padding:8px 14px; border-radius:999px;
+}
+.tab.active{
+  background:var(--brand); color:#fff;
+}
+
+/* ====== Features (Home) ====== */
+.features{
+  display:grid;
+  gap:16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  margin-top:32px;
+}
+
+.feature-card{
+  background: var(--panel);
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 6px 16px rgba(2,6,23,.04);
+
+  display:grid;
+  grid-template-columns: 40px 1fr;   /* kolom ikon tetap */
+  align-items:flex-start;
+  gap:12px;
+  min-height: 132px;                 /* tinggi seragam */
+}
+
+.feature-card:hover{
+  transform: translateY(-2px);
+  box-shadow:0 10px 24px rgba(2,6,23,.06);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.feature-icon{
+  width:40px; height:40px;
+  display:grid; place-items:center;
+  font-size:20px; line-height:1;
+  border-radius:10px;
+  border:1px solid #e5e7eb;
+  background:#f9fafb;
+}
+
+.feature-title{
+  margin:0; font-size:18px; font-weight:800;
+}
+
+.feature-desc{
+  margin-top:6px; color:#475569; line-height:1.6;
+}
+
+/* ====== DaftarTrip polish ====== */
+.card.card-hover{ transition: box-shadow .2s ease, transform .06s ease }
+.card.card-hover:hover{ box-shadow: 0 12px 32px rgba(2,6,23,.09); transform: translateY(-1px) }
+
+.grid-cards{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap:12px;
+}
+
+.toolbar{ display:flex; gap:12px; align-items:center; flex-wrap:wrap }
+
+.input-with-icon{ position:relative }
+.input-with-icon .input{ padding-left:38px }
+.input-with-icon .icon{
+  position:absolute; left:12px; top:50%; transform:translateY(-50%);
+  font-size:14px; color:#94a3b8; pointer-events:none;
+}
+
+.kpi{ display:flex; gap:8px; align-items:center; color:#475569; font-size:14px }
+.kpi b{ color:#0f172a; font-weight:800 }
